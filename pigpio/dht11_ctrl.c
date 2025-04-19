@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <pigpio.h>
 
-#define DHT_PIN 4  // BCM GPIO 번호
+#define DHT_PIN 4  // BCM GPIO number
 
 int read_dht11(int *humidity, int *temperature) {
     uint8_t last_state = PI_HIGH;
@@ -9,16 +9,16 @@ int read_dht11(int *humidity, int *temperature) {
     uint8_t j = 0, i;
     uint8_t data[5] = {0};
 
-    // 핸드셰이크 시작
+    // Send start signal
     gpioSetMode(DHT_PIN, PI_OUTPUT);
     gpioWrite(DHT_PIN, PI_LOW);
-    gpioDelay(18000);  // 18ms
+    gpioDelay(18000);  // 18ms low
     gpioWrite(DHT_PIN, PI_HIGH);
-    gpioDelay(40);     // 20~40us
+    gpioDelay(40);     // 20~40us high
 
     gpioSetMode(DHT_PIN, PI_INPUT);
 
-    // 85개의 상태 변화 감지 (start + 40bit + 여유)
+    // Read the response and 40 bits of data
     for (i = 0; i < 85; i++) {
         counter = 0;
         while (gpioRead(DHT_PIN) == last_state) {
@@ -30,10 +30,10 @@ int read_dht11(int *humidity, int *temperature) {
 
         if (counter == 255) break;
 
-        // 첫 3번 변화는 응답 시퀀스이므로 무시
+        // Skip the first 3 state changes (response signal)
         if ((i >= 4) && (i % 2 == 0)) {
             data[j / 8] <<= 1;
-            if (counter > 40)  // '1'일 확률 높음
+            if (counter > 40)  // Likely a '1'
                 data[j / 8] |= 1;
             j++;
         }
@@ -44,18 +44,18 @@ int read_dht11(int *humidity, int *temperature) {
         if (data[4] == (sum & 0xFF)) {
             *humidity = data[0];
             *temperature = data[2];
-            return 0;  // 성공
+            return 0;  // Success
         } else {
-            return -2; // 체크섬 에러
+            return -2; // Checksum error
         }
     } else {
-        return -1;     // 데이터 부족
+        return -1;     // Not enough data
     }
 }
 
 int main() {
     if (gpioInitialise() < 0) {
-        printf("pigpio 초기화 실패\n");
+        printf("Failed to initialize pigpio\n");
         return 1;
     }
 
@@ -63,9 +63,9 @@ int main() {
     int result = read_dht11(&humidity, &temperature);
 
     if (result == 0) {
-        printf("온도: %d°C, 습도: %d%%\n", temperature, humidity);
+        printf("Temperature: %d°C, Humidity: %d%%\n", temperature, humidity);
     } else {
-        printf("DHT11 읽기 실패 (코드: %d)\n", result);
+        printf("Failed to read DHT11 (code: %d)\n", result);
     }
 
     gpioTerminate();
