@@ -113,7 +113,7 @@ int main( void )
             }
         }        
         gpioSleep(PI_TIME_RELATIVE,  2,  0); /* wait 1sec to refresh */
-        if(loop++ == 100) break;
+        if(loop++ == 1000) break;
 //        break;
  
     }
