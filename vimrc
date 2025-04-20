@@ -9,3 +9,8 @@ set nobackup
 
 set tabstop=4
 set expandtab
+
+set nocompatible
+set hlsearch
+set visualbell
+syntax on
